@@ -1,0 +1,5 @@
+**/__pycache__
+**/sim_build
+tests/results.xml
+.pytest_cache
+results.xml
