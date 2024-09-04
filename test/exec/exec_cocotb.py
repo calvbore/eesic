@@ -12,7 +12,8 @@ async def assert_push_constraints(
     opcode, 
     code_data, 
     old_stack_data,
-    old_stack_height
+    old_stack_height,
+    prev_pc
 ):
     assert opcode >= 0x5f and opcode < 0x80
     num = opcode - 0x5f
@@ -26,10 +27,10 @@ async def assert_push_constraints(
 
     if opcode == 0x5f:
         assert dut.gas.value  == 2
-        assert dut.pc_o.value == 1
+        assert dut.pc_o.value == prev_pc + 1
     else:
         assert dut.gas.value  == 3
-        assert dut.pc_o.value == num
+        assert dut.pc_o.value == prev_pc + num
 
     assert dut.push_num.value == 1
 
@@ -38,7 +39,8 @@ async def assert_dup_constraints(
     dut, 
     opcode, 
     old_stack_data, 
-    old_stack_height
+    old_stack_height,
+    prev_pc
 ):
     assert opcode >= 0x80 and opcode < 0x90
     num = opcode - 0x80
@@ -54,14 +56,15 @@ async def assert_dup_constraints(
 
     assert dut.push_num.value == 1
 
-    assert dut.pc_o.value == 1
+    assert dut.pc_o.value == prev_pc + 1
     
 # SWAP #
 async def assert_swap_constraints(
     dut, 
     opcode, 
     old_stack_data, 
-    old_stack_height
+    old_stack_height,
+    prev_pc
 ):
     assert opcode >= 0x90
     num = opcode - 0x90
@@ -90,7 +93,7 @@ async def assert_swap_constraints(
     assert dut.push_num.value == num+2
     assert dut.pop_num.value  == num+2
 
-    assert dut.pc_o.value == 1
+    assert dut.pc_o.value == prev_pc + 1
 
 # TESTS #
 
@@ -123,6 +126,8 @@ async def test_codes(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         dut.clk.value = 1
         await Timer(1, "step")
         dut.clk.value = 0
@@ -137,21 +142,24 @@ async def test_codes(dut):
                 opcode,
                 code_data,
                 old_stack_data,
-                old_stack_height
+                old_stack_height,
+                prev_pc
             )
         elif opcode >= 0x80 and opcode < 0x90:
             await assert_dup_constraints(
                 dut,
                 opcode,
                 old_stack_data,
-                old_stack_height
+                old_stack_height,
+                prev_pc
             )
         elif opcode >= 0x90 and opcode < 0xa0:
             await assert_swap_constraints(
                 dut,
                 opcode,
                 old_stack_data,
-                old_stack_height
+                old_stack_height,
+                prev_pc
             )
 
         # print(dut.exit.value)
@@ -182,6 +190,8 @@ async def test_push_to_stack(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         dut.clk.value = 1
         await Timer(1, "step")
         dut.clk.value = 0
@@ -195,7 +205,8 @@ async def test_push_to_stack(dut):
             opcode,
             code_data,
             old_stack_data,
-            old_stack_height
+            old_stack_height,
+            prev_pc
         )
 
 # test dupes after pushes to the stack
@@ -224,6 +235,8 @@ async def test_dup_on_stack(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         # cycle clock
         dut.clk.value = 1
         await Timer(1, "step")
@@ -235,7 +248,8 @@ async def test_dup_on_stack(dut):
             opcode,
             code_data,
             old_stack_data,
-            old_stack_height
+            old_stack_height,
+            prev_pc
         )
 
         # random duplicate stack element
@@ -248,6 +262,8 @@ async def test_dup_on_stack(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         # cycle clock
         dut.clk.value = 1
         await Timer(1, "step")
@@ -258,7 +274,8 @@ async def test_dup_on_stack(dut):
             dut,
             opcode,
             old_stack_data,
-            old_stack_height
+            old_stack_height,
+            prev_pc
         )
 
 # test swaps after pushing to stack
@@ -287,6 +304,8 @@ async def test_swap_on_stack(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         # cycle clock
         dut.clk.value = 1
         await Timer(1, "step")
@@ -298,7 +317,8 @@ async def test_swap_on_stack(dut):
             opcode,
             code_data,
             old_stack_data,
-            old_stack_height
+            old_stack_height,
+            prev_pc
         )
 
         # random duplicate stack element
@@ -311,6 +331,8 @@ async def test_swap_on_stack(dut):
 
         dut.opcode.value = opcode
 
+        prev_pc = dut.pc_o.value
+
         # cycle clock
         dut.clk.value = 1
         await Timer(1, "step")
@@ -321,5 +343,6 @@ async def test_swap_on_stack(dut):
             dut,
             opcode,
             old_stack_data,
-            old_stack_height
+            old_stack_height,
+            prev_pc
         )

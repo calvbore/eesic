@@ -16,7 +16,7 @@ always @(posedge clk or posedge rst) begin
     if (rst) begin
         pc_q <= 0;
     end else begin
-        pc_q <= pc_d;
+        pc_q <= pc_q + pc_d;
     end
 end
 
