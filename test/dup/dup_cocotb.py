@@ -38,6 +38,6 @@ async def test_exit(dut):
         await Timer(1, "step")
         assert dut.exit.value == 0
 
-        dut.stack_height.value = num+2
+        dut.stack_height.value = num
         await Timer(1, "step")
         assert dut.exit.value == 1
